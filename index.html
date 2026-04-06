@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para mi novia ❤️</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html { 
+            width: 100%; height: 100%; 
+            overflow: hidden; 
+            background-color: #000; 
+            font-family: 'Segoe UI', sans-serif;
+            /* Evita seleccionar o que salgan menús raros al mantener presionado en el celular */
+            -webkit-user-select: none;
+            user-select: none; 
+            -webkit-touch-callout: none;
+        }
+
+        .seccion {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-in-out; 
+            z-index: 1;
+        }
+
+        .hidden { display: none !important; opacity: 0; }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* FONDOS */
+        .background {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+            /* Mejora la nitidez de las imágenes */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* CONTENEDOR CENTRAL (Para que no se encimen estrella y texto) */
+        .contenedor-interactivo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4vh; 
+            z-index: 10;
+            width: 100%;
+        }
+
+        /* LA ESTRELLA */
+        #estrella {
+            width: 70vw; 
+            max-width: 450px; 
+            cursor: pointer;
+            animation: titileo 2.5s infinite ease-in-out;
+            touch-action: none; 
+            display: block; 
+            transition: transform 0.2s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        #estrella:active { transform: scale(0.92); }
+
+        @keyframes titileo {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px gold); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 45px white); }
+        }
+
+        /* TEXTO INSTRUCCIÓN */
+        #instruccion-img {
+            width: 80vw; 
+            max-width: 700px;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            pointer-events: none;
+        }
+
+        /* TRANSICIÓN DE LUZ BLANCA */
+        #pantalla-blanca {
+            background-color: white;
+            opacity: 0; 
+            z-index: 100; 
+            pointer-events: none; 
+            transition: opacity 1.2s ease-in; 
+        }
+
+        #pantalla-blanca.iluminar { opacity: 1; }
+
+        /* TEXTO FINAL */
+        #texto-final {
+            width: 75vw;
+            max-width: 380px; 
+            z-index: 10;
+            animation: bucleFinal 4s infinite ease-in-out;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        @keyframes bucleFinal {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1.5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="musica" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="pantalla-video" class="seccion">
+        <video id="vid" autoplay muted playsinline>
+            <source src="video1.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <div id="pantalla-interaccion" class="seccion hidden">
+        <img src="fondo.jpg" class="background">
+        <div class="contenedor-interactivo">
+            <img src="estrella.png" id="estrella">
+            <img src="texto-instruccion.png" id="instruccion-img">
+        </div>
+    </div>
+
+    <div id="pantalla-blanca" class="seccion"></div>
+
+    <div id="pantalla-final" class="seccion hidden">
+        <img src="fondo-final.jpg" class="background">
+        <img src="texto-final.png" id="texto-final">
+    </div>
+
+    <script>
+        const video = document.getElementById('vid');
+        const musica = document.getElementById('musica');
+        const pVideo = document.getElementById('pantalla-video');
+        const pInteraccion = document.getElementById('pantalla-interaccion');
+        const pBlanca = document.getElementById('pantalla-blanca');
+        const pFinal = document.getElementById('pantalla-final');
+        const estrella = document.getElementById('estrella');
+
+        // TU ID DE FORMSPREE
+        const FORMSPREE_ID = "xzdkozjy"; 
+
+        // Iniciar música
+        const iniciarTodo = () => { if(musica.paused) musica.play(); };
+        window.addEventListener('click', iniciarTodo);
+        window.addEventListener('touchstart', iniciarTodo);
+
+        // Al terminar el video
+        video.onended = () => {
+            pVideo.classList.add('hidden');
+            setTimeout(() => {
+                pInteraccion.classList.remove('hidden');
+                configurarGrabacion();
+            }, 500);
+        };
+
+        // Lógica de grabación
+        async function configurarGrabacion() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                let chunks = [];
+
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
+                mediaRecorder.onstop = async () => {
+                    // Inicia transición de luz
+                    pBlanca.classList.add('iluminar');
+
+                    // Preparar y enviar el audio
+                    const blob = new Blob(chunks, { type: 'audio/wav' });
+                    const fd = new FormData();
+                    fd.append("Deseo_Susurrado", blob, "deseo.wav");
+
+                    fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+                        method: "POST",
+                        body: fd,
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    // Terminar la transición y mostrar el final
+                    setTimeout(() => {
+                        pInteraccion.classList.add('hidden');
+                        pFinal.classList.remove('hidden');
+                        setTimeout(() => {
+                            pBlanca.classList.remove('iluminar');
+                        }, 200);
+                    }, 1300);
+                };
+
+                // Eventos para grabar al mantener presionado
+                const start = (e) => { e.preventDefault(); chunks = []; mediaRecorder.start(); };
+                const stop = () => { if(mediaRecorder.state === "recording") mediaRecorder.stop(); };
+
+                // Soporte para PC (Mouse)
+                estrella.addEventListener('mousedown', start);
+                window.addEventListener('mouseup', stop);
+                
+                // Soporte para Celular (Touch)
+                estrella.addEventListener('touchstart', start);
+                window.addEventListener('touchend', stop);
+
+            } catch (err) {
+                alert("La estrella necesita acceso al micrófono para poder escuchar el deseo.");
+            }
+        }
+    </script>
+</body>
+</html>
